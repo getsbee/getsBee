@@ -42,17 +42,17 @@ public class SchedulerConfig {
     @Value("${cloud.aws.lambda.url}")
     private String lambdaUrl;
 
-    @Scheduled(fixedRate = 1000 * 60 * 15)
+    @Scheduled(fixedRate = 1000 * 60 * 60)
     public void createMemberCsv() {
         s3Service.uploadFile(csvUtil.createMemberCsv(), memberDirectory);
     }
 
-    @Scheduled(fixedRate = 1000 * 60 * 15)
+    @Scheduled(fixedRate = 1000 * 60 * 60)
     public void createPostCsv() {
         s3Service.uploadFile(csvUtil.createPostCsv(), postDirectory);
     }
 
-    @Scheduled(fixedRate = 1000 * 60 * 15)
+    @Scheduled(fixedRate = 1000 * 60 * 60)
     public void extractLog() {
         webClient.mutate()
                 .baseUrl(lambdaUrl)
@@ -65,7 +65,7 @@ public class SchedulerConfig {
                 .block();
     }
 
-    @Scheduled(fixedRate = 1000 * 60 * 7)
+    @Scheduled(fixedRate = 1000 * 60 * 10)
     public void extractCategory() {
         postRepository.findAllNotInInterest().forEach(post ->
                 extractCategoryService.extractCategoryFromPost(post)
