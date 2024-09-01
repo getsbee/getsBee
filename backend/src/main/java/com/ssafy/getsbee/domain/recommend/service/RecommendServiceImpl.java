@@ -18,8 +18,6 @@ import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -46,11 +44,6 @@ public class RecommendServiceImpl implements RecommendService {
     @Override
     public Slice<RecommendResponse> recommendPersonalizePosts(Long memberId, Pageable pageable) {
         Member member = memberService.findById(memberId);
-        if (isUpdatedRecommend(member.getUpdatedAt())) {
-            List<Long> postIds = personalizeService.getRecommendations(personalizePostArn, memberId.toString(), null, RECOMMEND_SIZE);
-            Slice<Post> posts = postRepository.findInPostIds(postIds, pageable);
-            return mapToRecommendResponse(sortPostsByIds(posts, postIds, pageable.getPageSize()));
-        }
         List<Category> categories = mapToCategory(interestRepository.findAllByMember(member));
         return mapToRecommendResponse(postRepository.findAllByCategory(categories, null, pageable));
     }
@@ -58,11 +51,6 @@ public class RecommendServiceImpl implements RecommendService {
     @Override
     public Slice<RecommendResponse> recommendRelatedPosts(Long postId, Pageable pageable) {
         Post post = postService.findById(postId);
-        if (isUpdatedRecommend(post.getUpdatedAt())) {
-            List<Long> postIds = personalizeService.getRecommendations(relatedPostArn, null, postId.toString(), RECOMMEND_SIZE);
-            Slice<Post> posts = postRepository.findInPostIds(postIds, pageable);
-            return mapToRecommendResponse(sortPostsByIds(posts, postIds, pageable.getPageSize()));
-        }
         List<Category> categories = mapToCategory(interestRepository.findByUrl(post.getUrl()));
         return mapToRecommendResponse(postRepository.findAllByCategory(categories, postId, pageable));
     }
@@ -81,28 +69,7 @@ public class RecommendServiceImpl implements RecommendService {
         return mapToRecommendResponse(sortPostsByIds(posts, postIds, pageable.getPageSize()));
     }
 
-    private Boolean isUpdatedRecommend(LocalDateTime updatedAt) {
-        LocalDateTime referenceDate = LocalDateTime.now().minus(1, ChronoUnit.DAYS);
-        if (updatedAt.isBefore(referenceDate) || updatedAt.isEqual(referenceDate)) {
-            return true;
-        }
-        return false;
-    }
 
-    private Slice<Post> sortPostsByIds(Slice<Post> posts, List<Long> postIds, int size) {
-        List<Post> postList = posts.getContent();
-
-        Map<Long, Integer> postIdIndexMap = IntStream.range(0, postIds.size())
-                .boxed()
-                .collect(Collectors.toMap(postIds::get, i -> i));
-
-        List<Post> sortedPostList = postList.stream()
-                .filter(post -> postIdIndexMap.containsKey(post.getId()))
-                .sorted(Comparator.comparing(post -> postIdIndexMap.get(post.getId())))
-                .limit(size)
-                .toList();
-        return new SliceImpl<>(sortedPostList, posts.getPageable(), posts.hasNext());
-    }
 
     private List<Category> mapToCategory(List<Interest> interests) {
         return interests.stream()
@@ -125,5 +92,20 @@ public class RecommendServiceImpl implements RecommendService {
                 .filter(post -> urls.add(post.getUrl()))
                 .toList();
         return new SliceImpl<>(filteredPosts, posts.getPageable(), posts.hasNext());
+    }
+
+    private Slice<Post> sortPostsByIds(Slice<Post> posts, List<Long> postIds, int size) {
+        List<Post> postList = posts.getContent();
+
+        Map<Long, Integer> postIdIndexMap = IntStream.range(0, postIds.size())
+                .boxed()
+                .collect(Collectors.toMap(postIds::get, i -> i));
+
+        List<Post> sortedPostList = postList.stream()
+                .filter(post -> postIdIndexMap.containsKey(post.getId()))
+                .sorted(Comparator.comparing(post -> postIdIndexMap.get(post.getId())))
+                .limit(size)
+                .toList();
+        return new SliceImpl<>(sortedPostList, posts.getPageable(), posts.hasNext());
     }
 }
