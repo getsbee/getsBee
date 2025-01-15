@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "getsBee",
   "description": "highlight sentences and share",
-  "version": "1.5",
+  "version": "2.0",
   "action": {
     "default_popup": "index.html",
     "default_icon": "icon.png"
@@ -15,13 +15,15 @@
     {
       "matches": ["<all_urls>"],
       "js": [
+        "/controller/EventManager.js",
         "/utils/constant.js",
         "/utils/validation.js",
         "/views/View.js",
         "/views/TooltipView.js",
         "/views/ColorBtnView.js",
         "/views/TrashBtnView.js",
-        "views/HighlightView.js",
+        "/views/HighlightView.js",
+        "/views/CloseBtnView.js",
         "/model/pageModel.js",
         "/model/selectionModel.js",
         "/model/loginModel.js",
@@ -29,22 +31,17 @@
         "/model/LocalStorageModel.js",
         "/model/recommendModel.js",
         "/controller/MainController.js",
+        "/dto/highlightDTO.js",
         "/utils/api.js",
-        "/app.js"
+        "app.js"
         
-        // "data.js",
-        // "content.js",
-        // "highlight.js",
-        // "constant.js",
-        // "api.js",
-        // "validation.js"
       ],
       "css": ["getsBeeCustom.css"],
-      "type": "module"
+      "type": "module",
+      "host_permissions": [
+        "https://velog.io/*",
+        "https://www.withme.my/*"
+      ]
     }
-  ],
-  "content_security_policy": {
-    "script-src": "'self' 'https://unpkg.com'",
-    "object-src": "'self'"
-  }
+  ]
 }

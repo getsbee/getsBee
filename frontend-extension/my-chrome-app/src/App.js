@@ -1,10 +1,13 @@
 /* eslint-disable no-undef */
 import "./App.css";
-import Content from "./Content";
+import Container from "./components/Container";
 import Header from "./Header";
 import Footer from "./Footer";
 import React, { useState, useEffect, useRef, useReducer } from "react";
-
+import { useRecoilValue } from 'recoil';
+import { domainState } from "./recoil/domainState"
+import { enableState } from "./recoil/enableState";
+import Disable from "./components/Disable";
 const initloginState = {
   islogin: false,
   accessToken: null,
@@ -34,9 +37,7 @@ function loginReducer(loginState, action) {
 
 function App() {
   const [loginstate, loginDispatch] = useReducer(loginReducer, initloginState);
-  const [HTMLContent, setHTMLContent] = useState("");
-  const [domain, setDomain] = useState("");
-  const [isEnabled, setIsEnabled] = useState(false);
+  const enable = useRecoilValue(enableState);
 
   useEffect(() => {
     chrome.storage.sync.get(["GETSBEE_LOGIN"], (result) => {
@@ -52,31 +53,18 @@ function App() {
         });
       }
     });
-
-    chrome.storage.local.get(["domain", "resultArr", "HTMLContent"], (result) => {
-      setDomain(result.domain);
-      setHTMLContent(result.HTMLContent)
-    });
   }, []);
 
 
-  useEffect(() => {
-    chrome.storage.sync.get([domain], (result) => {
-      setIsEnabled(result[domain] || false);
-    });
-  }, [domain]);
-  
-;
+
   return (
     <>
       <div className="App">
         <Header isLogin={loginstate.islogin} userState={loginstate.userState}/>
-        <Content isLogin={loginstate.islogin} isEnabled={isEnabled} HTMLContent={HTMLContent}/>
-        <Footer
-          domain={domain}
-          isEnabled={isEnabled}
-          setIsEnabled={setIsEnabled}
-        />
+          {
+            !enable && loginstate.islogin ? <Container/>:<Disable />
+          }
+        <Footer/>
       </div>
     </>
   );

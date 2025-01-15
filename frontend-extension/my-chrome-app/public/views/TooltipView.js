@@ -3,7 +3,9 @@ const TooltipView = Object.create(View);
 
 TooltipView.setup = function (el) {
   this.init(el)
-
+  eventManager.on('showTooltip', (data) => {
+    this.render(data.left, data.top);
+  });
   return this
 }
 
@@ -30,7 +32,7 @@ TooltipView.getHtmlElement = function() {
 };
 
 
-TooltipView.render = function (left, top) {
+TooltipView.render = async function (left, top) {
   this.el.style.left = `${left}px`;
   this.el.style.top = `${top}px`;
   this.show();
